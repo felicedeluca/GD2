@@ -38,6 +38,38 @@ def scale_graph(G, alpha):
 
     return H
 
+def normalize_edge_length(G):
+
+    shortest_edge = float("inf")
+
+    vertices_positions = nx.get_node_attributes(G, "pos")
+
+    for e in nx.edges(G):
+
+        (u,v) = e
+
+        x_v = float(vertices_positions[v].split(",")[0])
+        y_v = float(vertices_positions[v].split(",")[1])
+
+        x_u = float(vertices_positions[u].split(",")[0])
+        y_u = float(vertices_positions[u].split(",")[1])
+
+        curr_length = math.sqrt((x_v-x_u)**2+(y_v-y_u)**2)
+
+        shortest_edge = min(shortest_edge, curr_length)
+
+
+    print(shortest_edge)
+
+    alpha = 1/shortest_edge
+
+    G = scale_graph(G, alpha)
+
+    return G
+
+
+
+
 def writeSPXPositiontoNetworkXGraph(G, X):
     '''
     Convert matrix X to NetworkX graph structure
@@ -266,24 +298,27 @@ def optimize(G):
 # print('usage:python3 GD2Main.py graph_path output_folder_path metrics')
 # quit()
 
-#GRAPH_PATH = sys.argv[1]
+GRAPH_PATH = sys.argv[1]
 #OUTPUT_FOLDER = sys.argv[2] # Output folder
 #METRICS = sys.argv[3]
 
-#input_file_name = os.path.basename(GRAPH_PATH)
-graph_name = "hi"
-#print(graph_name)
-
-G = nx.random_tree(100)
+input_file_name = os.path.basename(GRAPH_PATH)
+# graph_name = "hi"
+# #print(graph_name)
+#
+# G = nx.random_tree(100)
 
 # Reading the graphs
-#G = nx_read_dot(GRAPH_PATH) #this should be the default structure
+G = nx_read_dot(GRAPH_PATH) #this should be the default structure
 if not nx.is_connected(G):
     print('The graph is disconnected')
     quit()
 
 # convert ids to integers
 G = nx.convert_node_labels_to_integers(G)
+G = normalize_edge_length(G)
+
+exit()
 
 pos = nx.planar_layout(G)
 print(pos)
@@ -300,15 +335,12 @@ print(nx.get_node_attributes(G, "pos"))
 
 print(nx.info(G))
 
-# G = scale_graph(G, 100)
-write_dot(G, 'output/' + graph_name + '_initial.dot')
-# G = scale_graph(G, 1/100)
 # Metrics weights
 compute_ue=0 #Uniformity Edge lengths
-compute_st=1 # Stress
+compute_st=0 # Stress
 compute_sym=0 # Symmetry
 compute_np=0 # Neighbor Preservation
-compute_cr=20 #Crossings
+compute_cr=0 #Crossings
 compute_ar=0 #Area
 compute_asp=0 #Aspect ratio
 
@@ -337,12 +369,14 @@ initial_ar = 1
 initial_asp = 1
 all_pairs_sp = None
 
-curr_G = G.copy()
+G = normalize_edge_length(G)
 print("Initial metrics")
-printMetrics(curr_G)
+write_dot(G, 'output/' + graph_name + '_initial.dot')
+printMetrics(G)
 final_position_matrix = optimize(G)
-curr_G = writeSPXPositiontoNetworkXGraph(curr_G, final_position_matrix)
-write_dot(curr_G, 'output/' + graph_name + '_final.dot')
+G = writeSPXPositiontoNetworkXGraph(G, final_position_matrix)
+G = normalize_edge_length(G)
+write_dot(G, 'output/' + graph_name + '_final.dot')
 print("Final Metrics")
-printMetrics(curr_G)
+printMetrics(G)
 metrics_evaluator(final_position_matrix, print_val=True)

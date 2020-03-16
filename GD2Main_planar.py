@@ -152,6 +152,11 @@ def printMetrics(G):
         initial_upward = intcoord.upwardness(G)
         print("UP:", initial_upward, end=" - ")
 
+    if compute_upwardgrid:
+        upwardgrid = intcoord.upwardgrid(G)
+        print("Grid:", upwardgrid, end=" - ")
+
+
 
     print("")
 
@@ -246,11 +251,23 @@ def metrics_evaluator(X, print_val=False):
     if compute_intcoo:
         nonintv = intcoord.nonintvalues(G)
 
+
     nonupward = 0
     if compute_upward:
         nonupward = intcoord.upwardness(G)
 
-    return_val = ue+st+sym+np+cr+ar+asp+nonintv+nonupward
+    nonoverlapping = 0
+    if compute_nonoverlapping:
+        nonoverlapping = intcoord.overlapping(G)
+
+    upawardgrid = 0
+    if compute_upwardgrid:
+        upwardgrid = intcoord.upwardgrid(G)
+        print("Grid:", upwardgrid, end=" - ")
+
+    return_val = upawardgrid
+
+    # return_val = ue+st+sym+np+cr+ar+asp+nonintv+nonupward+nonoverlapping
 
     if print_val:
         print("score: ", return_val)
@@ -322,8 +339,10 @@ compute_np=0 # Neighbor Preservation
 compute_cr=0 #Crossings
 compute_ar=0 #Area
 compute_asp=0 #Aspect ratio
-compute_intcoo=1
+compute_intcoo=0
 compute_upward = 0
+compute_nonoverlapping = 0
+compute_upwardgrid = 1
 
 #if METRICS=='0':
 #    compute_ue = 1
@@ -353,14 +372,14 @@ all_pairs_sp = None
 curr_G = G.copy()
 print("Initial metrics")
 # printMetrics(curr_G)
-# G=scale_graph(G,1000)
+G=scale_graph(G,100)
 final_position_matrix = optimize(G)
 curr_G = writeSPXPositiontoNetworkXGraph(curr_G, final_position_matrix)
-curr_G=scale_graph(curr_G,100)
+# curr_G=scale_graph(curr_G,100)
 write_dot(curr_G, 'output/' + graph_name + '_final.dot')
 # print(nx.get_node_attributes(curr_G, "pos"))
-curr_G=scale_graph(curr_G,1/100)
+# curr_G=scale_graph(curr_G,1/1000)
 print("Final Metrics")
 # printMetrics(curr_G)
-# metrics_evaluator(final_position_matrix, print_val=True)
+metrics_evaluator(final_position_matrix, print_val=True)
 print(nx.get_node_attributes(G, "pos"))

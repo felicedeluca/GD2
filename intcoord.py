@@ -1,6 +1,29 @@
 import networkx as nx
 import math
 
+def overlapping(G):
+
+    pos = nx.get_node_attributes(G, "pos")
+    overlapping  = 0
+    for v in nx.nodes(G):
+        for u in nx.nodes(G):
+
+            if u==v:
+                continue
+
+            x_u = round(float(pos[u].split(",")[0]),5)
+            x_v = round(float(pos[v].split(",")[0]),5)
+            y_u = round(float(pos[u].split(",")[1]),5)
+            y_v = round(float(pos[v].split(",")[1]),5)
+
+            if (x_u == x_v and y_u == y_v):
+                overlapping += 0.5
+
+
+    return overlapping
+
+
+
 def x_span(G, desired_span=1):
     '''
         The desired x-span between two vertices on the same line of a grid
@@ -15,10 +38,10 @@ def x_span(G, desired_span=1):
     epsilon_for_same_y = 0.0000000001
     for v in nx.nodes(G):
         for u in nx.nodes(G):
-            x_u = float(pos[u].split(",")[0])
-            x_v = float(pos[v].split(",")[0])
-            y_u = float(pos[u].split(",")[1])
-            y_v = float(pos[v].split(",")[1])
+            x_u = round(float(pos[u].split(",")[0]),5)
+            x_v = round(float(pos[v].split(",")[0]),5)
+            y_u = round(float(pos[u].split(",")[1]),5)
+            y_v = round(float(pos[v].split(",")[1]),5)
 
             if y_u != y_v:
                 continue
@@ -52,7 +75,7 @@ def upwardness(G):
         if y_u < (y_v-1):
             continue
 
-        non_upward += epsilon_for_same_y + (y_u-y_v)
+        non_upward += epsilon_for_same_y + (y_u-y_v)+1
 
     return non_upward
 
@@ -79,3 +102,13 @@ def nonintvalues(G):
         nonint += y_number_dec
 
     return nonint
+
+def upwardgrid(G):
+
+    score = 0
+    score += nonintvalues(G)
+    score += upwardness(G)
+    score += x_span(G)
+    score += overlapping(G)
+
+    return score
